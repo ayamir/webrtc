@@ -528,6 +528,16 @@ SEncParamExt H264EncoderImpl::CreateEncoderParams(size_t i) const {
   } else {
     RTC_NOTREACHED();
   }
+  // DONE: initialize Object Range Array here.
+  encoder_params.iObjectRangeNum = configurations_[i].object_range_num;
+  encoder_params.pObjectRange = configurations_[i].ptr_object_range;
+  for (int j = 0; j < encoder_params.iObjectRangeNum; j++) {
+    encoder_params.pObjectRange[j].iXStart = configurations_[i].ptr_object_range[j].iXStart;
+    encoder_params.pObjectRange[j].iXEnd = configurations_[i].ptr_object_range[j].iXEnd;
+    encoder_params.pObjectRange[j].iYStart = configurations_[i].ptr_object_range[j].iYStart;
+    encoder_params.pObjectRange[j].iYEnd = configurations_[i].ptr_object_range[j].iYEnd;
+    encoder_params.pObjectRange[j].iQpOffset = configurations_[i].ptr_object_range[j].iQpOffset;
+  }
   encoder_params.iPicWidth = configurations_[i].width;
   encoder_params.iPicHeight = configurations_[i].height;
   encoder_params.iTargetBitrate = configurations_[i].target_bps;
@@ -535,6 +545,7 @@ SEncParamExt H264EncoderImpl::CreateEncoderParams(size_t i) const {
   // as OpenH264's iMaxBitrate. More details in https://crbug.com/webrtc/11543
   encoder_params.iMaxBitrate = UNSPECIFIED_BIT_RATE;
   // Rate Control mode
+  // NOTE: use RC_BITRATE_MODE
   encoder_params.iRCMode = RC_BITRATE_MODE;
   encoder_params.fMaxFrameRate = configurations_[i].max_frame_rate;
 
