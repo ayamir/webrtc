@@ -13,7 +13,7 @@
 namespace cricket {
 
 const int kVideoMtu = 1200;
-const int kVideoRtpSendBufferSize = 65536;
-const int kVideoRtpRecvBufferSize = 262144;
+const int kVideoRtpSendBufferSize = 16384;   // 64k / 4
+const int kVideoRtpRecvBufferSize = 262144;  // 256k
 
 }  // namespace cricket
