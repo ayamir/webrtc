@@ -43,12 +43,12 @@ std::vector<SdpVideoFormat> InternalEncoderFactory::GetSupportedFormats()
 
 std::unique_ptr<VideoEncoder> InternalEncoderFactory::CreateVideoEncoder(
     const SdpVideoFormat& format) {
+  if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName))
+    return H264Encoder::Create(cricket::VideoCodec(format));
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName))
     return VP8Encoder::Create();
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName))
     return VP9Encoder::Create(cricket::VideoCodec(format));
-  if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName))
-    return H264Encoder::Create(cricket::VideoCodec(format));
   if (kIsLibaomAv1EncoderSupported &&
       absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName))
     return CreateLibaomAv1Encoder();
