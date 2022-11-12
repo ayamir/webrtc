@@ -405,8 +405,25 @@ rtc_library("webrtc_h264") {
   ]
 
   if (rtc_use_h264) {
+    if (!is_clang) {
+      include_dirs = [ "//third_party/ffmpeg_msvc/include" ]
+      libs = [
+        "//third_party/ffmpeg_msvc/lib/avcodec.lib",
+        "//third_party/ffmpeg_msvc/lib/avdevice.lib",
+        "//third_party/ffmpeg_msvc/lib/avfilter.lib",
+        "//third_party/ffmpeg_msvc/lib/avformat.lib",
+        "//third_party/ffmpeg_msvc/lib/avutil.lib",
+        "//third_party/ffmpeg_msvc/lib/postproc.lib",
+        "//third_party/ffmpeg_msvc/lib/swresample.lib",
+        "//third_party/ffmpeg_msvc/lib/swscale.lib",
+      ]
+    } else {
+      deps += [
+        "//third_party/ffmpeg",
+      ]
+    }
+
     deps += [
-      "//third_party/ffmpeg",
       "//third_party/openh264:encoder",
     ]
     if (!build_with_mozilla) {
