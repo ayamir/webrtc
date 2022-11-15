@@ -29,6 +29,20 @@ namespace webrtc {
 
 class RTC_EXPORT VideoFrame {
  public:
+  struct ObjectRange {
+    int16_t iXStart;
+    int16_t iXEnd;
+    int16_t iYStart;
+    int16_t iYEnd;
+    int32_t iQpOffset;
+
+    ObjectRange() = default;
+    ObjectRange(int16_t iXStart, int16_t iXEnd, int16_t iYStart, int16_t iYEnd, int32_t iQpOffset)
+        : iXStart(iXStart), iXEnd(iXEnd), iYStart(iYStart), iYEnd(iYEnd), iQpOffset(iQpOffset) {}
+    ObjectRange(const ObjectRange& other)
+    : iXStart(other.iXStart), iXEnd(other.iXEnd), iYStart(other.iYStart), iYEnd(other.iYEnd), iQpOffset(other.iQpOffset) {}
+  };
+
   struct RTC_EXPORT UpdateRect {
     int offset_x;
     int offset_y;
@@ -97,6 +111,10 @@ class RTC_EXPORT VideoFrame {
     Builder& set_id(uint16_t id);
     Builder& set_update_rect(const absl::optional<UpdateRect>& update_rect);
     Builder& set_packet_infos(RtpPacketInfos packet_infos);
+    // TODO: set object range here.
+    Builder& set_object_range(const absl::optional<ObjectRange>& object_range);
+    // TODO: set object range list here.
+    // Builder& set_object_range_list(const std::vector<const ObjectRange&> object_range_list);
 
    private:
     uint16_t id_ = 0;
@@ -108,6 +126,9 @@ class RTC_EXPORT VideoFrame {
     absl::optional<ColorSpace> color_space_;
     absl::optional<UpdateRect> update_rect_;
     RtpPacketInfos packet_infos_;
+    // TODO: add object range here.
+    absl::optional<ObjectRange> object_range_;
+    // std::vector<const ObjectRange&> object_range_list_;
   };
 
   // To be deprecated. Migrate all use to Builder.
@@ -230,7 +251,23 @@ class RTC_EXPORT VideoFrame {
     update_rect_ = update_rect;
   }
 
+  bool has_object_range() const { return object_range_.has_value(); }
+
+  ObjectRange object_range() const {
+    return object_range_.value_or(ObjectRange{0, 0, 0, 0, 0});
+  }
+
+  void set_object_range(const VideoFrame::ObjectRange& object_range) {
+    RTC_DCHECK_GE(object_range.iXStart, 0);
+    RTC_DCHECK_GE(object_range.iYStart, 0);
+    RTC_DCHECK_LE(object_range.iXEnd, width());
+    RTC_DCHECK_LE(object_range.iYEnd, height());
+    object_range_ = object_range;
+  }
+
   void clear_update_rect() { update_rect_ = absl::nullopt; }
+
+  void clear_object_range() { object_range_ = absl::nullopt; }
 
   // Get information about packets used to assemble this video frame. Might be
   // empty if the information isn't available.
@@ -247,6 +284,16 @@ class RTC_EXPORT VideoFrame {
   }
 
  private:
+  // VideoFrame(uint16_t id,
+  //            const rtc::scoped_refptr<VideoFrameBuffer>& buffer,
+  //            int64_t timestamp_us,
+  //            uint32_t timestamp_rtp,
+  //            int64_t ntp_time_ms,
+  //            VideoRotation rotation,
+  //            const absl::optional<ColorSpace>& color_space,
+  //            const absl::optional<UpdateRect>& update_rect,
+  //            RtpPacketInfos packet_infos);
+
   VideoFrame(uint16_t id,
              const rtc::scoped_refptr<VideoFrameBuffer>& buffer,
              int64_t timestamp_us,
@@ -255,7 +302,19 @@ class RTC_EXPORT VideoFrame {
              VideoRotation rotation,
              const absl::optional<ColorSpace>& color_space,
              const absl::optional<UpdateRect>& update_rect,
-             RtpPacketInfos packet_infos);
+             RtpPacketInfos packet_infos,
+             const absl::optional<ObjectRange>& object_range);
+
+  // VideoFrame(uint16_t id,
+  //            const rtc::scoped_refptr<VideoFrameBuffer>& buffer,
+  //            int64_t timestamp_us,
+  //            uint32_t timestamp_rtp,
+  //            int64_t ntp_time_ms,
+  //            VideoRotation rotation,
+  //            const absl::optional<ColorSpace>& color_space,
+  //            const absl::optional<UpdateRect>& update_rect,
+  //            RtpPacketInfos packet_infos,
+  //            const std::vector<const ObjectRange&> object_range_list);
 
   uint16_t id_;
   // An opaque reference counted handle that stores the pixel data.
@@ -281,6 +340,9 @@ class RTC_EXPORT VideoFrame {
   // returned from the decoder.
   // Currently, not set for locally captured video frames.
   absl::optional<ProcessingTime> processing_time_;
+  // TODO: Update object range everyframe.
+  absl::optional<ObjectRange> object_range_;
+  // std::vector<const ObjectRange&> object_range_list_;
 };
 
 }  // namespace webrtc
