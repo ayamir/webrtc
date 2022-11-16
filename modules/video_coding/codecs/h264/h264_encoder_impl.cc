@@ -12,7 +12,7 @@
 // Everything declared/defined in this header is only required when WebRTC is
 // build with H264 support, please do not move anything out of the
 // #ifdef unless needed and tested.
-#ifdef WEBRTC_USE_H264
+// #ifdef WEBRTC_USE_H264
 
 #include "modules/video_coding/codecs/h264/h264_encoder_impl.h"
 
@@ -256,6 +256,7 @@ int32_t H264EncoderImpl::InitEncode(const VideoCodec* inst,
     configurations_[i].target_bps = codec_.startBitrate * 1000;
 
     // Create encoder parameters based on the layer configuration.
+    // NOTE: init Object Range here in InitEncode.
     SEncParamExt encoder_params = CreateEncoderParams(i);
 
     // Initialize.
@@ -457,14 +458,42 @@ int32_t H264EncoderImpl::Encode(
     SFrameBSInfo info;
     memset(&info, 0, sizeof(SFrameBSInfo));
 
-    // Encode!
-    int enc_ret = encoders_[i]->EncodeFrame(&pictures_[i], &info);
-    if (enc_ret != 0) {
-      RTC_LOG(LS_ERROR)
-          << "OpenH264 frame encoding failed, EncodeFrame returned " << enc_ret
-          << ".";
-      ReportError();
-      return WEBRTC_VIDEO_CODEC_ERROR;
+    // Get Object range from VideoFrame
+    auto object_range = input_frame.object_range();
+    if (object_range.IsEmpty()) {
+      // NOTE: Encode here
+      int enc_ret = encoders_[i]->EncodeFrame(&pictures_[i], &info);
+      if (enc_ret != 0) {
+        RTC_LOG(LS_ERROR)
+            << "OpenH264 frame encoding without ObjectRange failed, EncodeFrame returned " << enc_ret
+            << ".";
+        ReportError();
+        return WEBRTC_VIDEO_CODEC_ERROR;
+      } else {
+        RTC_LOG(LS_INFO)
+            << "OpenH264 frame encoding without ObjectRange succeeded, EncodeFrame returned " << enc_ret
+            << ".";
+      }
+    } else {
+      // NOTE: Encode here
+      SObjectRange object_range_;
+      object_range_.iXStart = (short)object_range.iXStart;
+      object_range_.iXEnd = (short)object_range.iXEnd;
+      object_range_.iYStart = (short)object_range.iYStart;
+      object_range_.iYEnd = (short)object_range.iYEnd;
+      object_range_.iQpOffset = (int)object_range.iQpOffset;
+      int enc_ret = encoders_[i]->EncodeFrame(&pictures_[i], &info, &object_range_);
+      if (enc_ret != 0) {
+        RTC_LOG(LS_ERROR)
+            << "OpenH264 frame encoding with ObjectRange failed, EncodeFrame returned " << enc_ret
+            << ".";
+        ReportError();
+        return WEBRTC_VIDEO_CODEC_ERROR;
+      } else {
+        RTC_LOG(LS_INFO)
+            << "OpenH264 frame encoding with ObjectRange succeeded, EncodeFrame returned " << enc_ret
+            << ".";
+      }
     }
 
     encoded_images_[i]._encodedWidth = configurations_[i].width;
@@ -645,4 +674,4 @@ void H264EncoderImpl::LayerConfig::SetStreamState(bool send_stream) {
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_USE_H264
+// #endif  // WEBRTC_USE_H264

@@ -11,7 +11,7 @@
 // Everything declared/defined in this header is only required when WebRTC is
 // build with H264 support, please do not move anything out of the
 // #ifdef unless needed and tested.
-#ifdef WEBRTC_USE_H264
+// #ifdef WEBRTC_USE_H264
 
 #include "modules/video_coding/codecs/h264/h264_color_space.h"
 
@@ -175,4 +175,4 @@ ColorSpace ExtractH264ColorSpace(AVCodecContext* codec) {
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_USE_H264
+// #endif  // WEBRTC_USE_H264
