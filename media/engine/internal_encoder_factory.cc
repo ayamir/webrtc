@@ -21,18 +21,19 @@
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/log_sinks.h"
 
 namespace webrtc {
 
 std::vector<SdpVideoFormat> InternalEncoderFactory::SupportedFormats() {
   std::vector<SdpVideoFormat> supported_codecs;
-  supported_codecs.push_back(SdpVideoFormat(cricket::kVp8CodecName));
-  for (const webrtc::SdpVideoFormat& format : webrtc::SupportedVP9Codecs())
-    supported_codecs.push_back(format);
   for (const webrtc::SdpVideoFormat& format : webrtc::SupportedH264Codecs())
     supported_codecs.push_back(format);
-  if (kIsLibaomAv1EncoderSupported)
-    supported_codecs.push_back(SdpVideoFormat(cricket::kAv1CodecName));
+  // supported_codecs.push_back(SdpVideoFormat(cricket::kVp8CodecName));
+  // for (const webrtc::SdpVideoFormat& format : webrtc::SupportedVP9Codecs())
+  //   supported_codecs.push_back(format);
+  // if (kIsLibaomAv1EncoderSupported)
+  //   supported_codecs.push_back(SdpVideoFormat(cricket::kAv1CodecName));
   return supported_codecs;
 }
 
@@ -43,15 +44,23 @@ std::vector<SdpVideoFormat> InternalEncoderFactory::GetSupportedFormats()
 
 std::unique_ptr<VideoEncoder> InternalEncoderFactory::CreateVideoEncoder(
     const SdpVideoFormat& format) {
-  if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName))
+  if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)) {
+    RTC_LOG(LS_INFO) << "Create H264Encoder.";
     return H264Encoder::Create(cricket::VideoCodec(format));
-  if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName))
-    return VP8Encoder::Create();
-  if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName))
-    return VP9Encoder::Create(cricket::VideoCodec(format));
-  if (kIsLibaomAv1EncoderSupported &&
-      absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName))
-    return CreateLibaomAv1Encoder();
+  }
+  // if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName)) {
+  //   RTC_LOG(LS_INFO) << "Create VP8Encoder.";
+  //   return VP8Encoder::Create();
+  // }
+  // if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName)) {
+  //   RTC_LOG(LS_INFO) << "Create VP9Encoder.";
+  //   return VP9Encoder::Create(cricket::VideoCodec(format));
+  // }
+  // if (kIsLibaomAv1EncoderSupported &&
+  //     absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName)) {
+  //   RTC_LOG(LS_INFO) << "Create LibaomAv1Encoder.";
+  //   return CreateLibaomAv1Encoder();
+  // }
   RTC_LOG(LS_ERROR) << "Trying to created encoder of unsupported format "
                     << format.name;
   return nullptr;
