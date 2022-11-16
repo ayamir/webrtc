@@ -41,6 +41,12 @@ class RTC_EXPORT VideoFrame {
         : iXStart(iXStart), iXEnd(iXEnd), iYStart(iYStart), iYEnd(iYEnd), iQpOffset(iQpOffset) {}
     ObjectRange(const ObjectRange& other)
     : iXStart(other.iXStart), iXEnd(other.iXEnd), iYStart(other.iYStart), iYEnd(other.iYEnd), iQpOffset(other.iQpOffset) {}
+
+    bool IsEmpty() const { return iXStart == 0 && iXEnd == 0 && iYStart == 0 && iYEnd == 0 && iQpOffset == 0; }
+    bool operator==(const ObjectRange& other) const {
+      return iXStart == other.iXStart && iXEnd == other.iXEnd && iYStart == other.iYStart && iYEnd == other.iYEnd && iQpOffset == other.iQpOffset;
+    }
+    bool operator!=(const ObjectRange& other) const { return !(*this == other); }
   };
 
   struct RTC_EXPORT UpdateRect {
