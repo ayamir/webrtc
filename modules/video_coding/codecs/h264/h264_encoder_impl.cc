@@ -40,6 +40,7 @@ namespace {
 
 const bool kOpenH264EncoderDetailedLogging = false;
 
+// TODO(ayamir): test the best threshold.
 // QP scaling thresholds.
 static const int kLowH264QpThreshold = 24;
 static const int kHighH264QpThreshold = 37;
@@ -557,16 +558,6 @@ SEncParamExt H264EncoderImpl::CreateEncoderParams(size_t i) const {
   } else {
     RTC_NOTREACHED();
   }
-  // DONE: initialize Object Range Array here.
-  encoder_params.iObjectRangeNum = configurations_[i].object_range_num;
-  encoder_params.pObjectRange = configurations_[i].ptr_object_range;
-  for (int j = 0; j < encoder_params.iObjectRangeNum; j++) {
-    encoder_params.pObjectRange[j].iXStart = configurations_[i].ptr_object_range[j].iXStart;
-    encoder_params.pObjectRange[j].iXEnd = configurations_[i].ptr_object_range[j].iXEnd;
-    encoder_params.pObjectRange[j].iYStart = configurations_[i].ptr_object_range[j].iYStart;
-    encoder_params.pObjectRange[j].iYEnd = configurations_[i].ptr_object_range[j].iYEnd;
-    encoder_params.pObjectRange[j].iQpOffset = configurations_[i].ptr_object_range[j].iQpOffset;
-  }
   encoder_params.iPicWidth = configurations_[i].width;
   encoder_params.iPicHeight = configurations_[i].height;
   encoder_params.iTargetBitrate = configurations_[i].target_bps;
@@ -591,6 +582,7 @@ SEncParamExt H264EncoderImpl::CreateEncoderParams(size_t i) const {
   // equivalent to CONSTANT_ID.
   encoder_params.eSpsPpsIdStrategy = SPS_LISTING;
   encoder_params.uiMaxNalSize = 0;
+  // TODO(ayamir): use multi-thread to improve performance.
   // Threading model: use auto.
   //  0: auto (dynamic imp. internal encoder)
   //  1: single thread (default value)
