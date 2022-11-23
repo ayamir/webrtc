@@ -55,7 +55,9 @@ enum H264EncoderImplEvent {
 int NumberOfThreads(int width, int height, int number_of_cores) {
   // TODO(hbos): In Chromium, multiple threads do not work with sandbox on Mac,
   // see crbug.com/583348. Until further investigated, only use one thread.
-  if (width * height >= 1920 * 1080 || number_of_cores > 8) {
+  if (width * height >= 1920 * 1832 || number_of_cores >= 24) {
+    return 24;  // 24 threads for oculus quest 2.
+  } else if (width * height >= 1920 * 1080 || number_of_cores >= 8) {
     return 8;  // 8 threads for 1080p on high perf machines.
   } else if (width * height > 1280 * 960 || number_of_cores >= 6) {
     return 3;  // 3 threads for 1080p.
@@ -485,10 +487,6 @@ int32_t H264EncoderImpl::Encode(
             << ".";
         ReportError();
         return WEBRTC_VIDEO_CODEC_ERROR;
-      } else {
-        RTC_LOG(LS_INFO)
-            << "OpenH264 frame encoding without ObjectRange succeeded, EncodeFrame returned " << enc_ret
-            << ".";
       }
     } else {
       // NOTE: Encode here
@@ -505,10 +503,6 @@ int32_t H264EncoderImpl::Encode(
             << ".";
         ReportError();
         return WEBRTC_VIDEO_CODEC_ERROR;
-      } else {
-        RTC_LOG(LS_INFO)
-            << "OpenH264 frame encoding with ObjectRange succeeded, EncodeFrame returned " << enc_ret
-            << ".";
       }
     }
 
@@ -602,8 +596,11 @@ SEncParamExt H264EncoderImpl::CreateEncoderParams(size_t i) const {
   //  0: auto (dynamic imp. internal encoder)
   //  1: single thread (default value)
   // >1: number of threads
+  int cores = 64;
   encoder_params.iMultipleThreadIdc = NumberOfThreads(
-      encoder_params.iPicWidth, encoder_params.iPicHeight, number_of_cores_);
+      encoder_params.iPicWidth, encoder_params.iPicHeight, cores);
+  // encoder_params.iMultipleThreadIdc = 0;
+  RTC_LOG(LS_INFO) << "OpenH264 encoder thread count: " << encoder_params.iMultipleThreadIdc;
   // The base spatial layer 0 is the only one we use.
   encoder_params.sSpatialLayers[0].iVideoWidth = encoder_params.iPicWidth;
   encoder_params.sSpatialLayers[0].iVideoHeight = encoder_params.iPicHeight;
