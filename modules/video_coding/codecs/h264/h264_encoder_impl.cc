@@ -38,7 +38,7 @@ namespace webrtc {
 
 namespace {
 
-const bool kOpenH264EncoderDetailedLogging = false;
+const bool kOpenH264EncoderDetailedLogging = true;
 
 // TODO(ayamir): test the best threshold.
 // QP scaling thresholds.
@@ -67,6 +67,18 @@ int NumberOfThreads(int width, int height, int number_of_cores) {
   // TODO(sprang): Also check sSliceArgument.uiSliceNum om GetEncoderPrams(),
   //               before enabling multithreading here.
   // return 1;
+}
+
+static void RTCTraceCallback(void* ctx, int level, const char* string) {
+  if (level == WELS_LOG_INFO) {
+    RTC_LOG(LS_INFO) << string;
+  } else if (level == WELS_LOG_WARNING) {
+    RTC_LOG(LS_WARNING) << string;
+  } else if (level == WELS_LOG_ERROR) {
+    RTC_LOG(LS_ERROR) << string;
+  } else if (level == WELS_LOG_DETAIL) {
+    RTC_LOG(LS_VERBOSE) << string;
+  }
 }
 
 VideoFrameType ConvertToVideoFrameType(EVideoFrameType type) {
@@ -229,6 +241,9 @@ int32_t H264EncoderImpl::InitEncode(const VideoCodec* inst,
       openh264_encoder->SetOption(ENCODER_OPTION_TRACE_LEVEL, &trace_level);
     }
     // else WELS_LOG_DEFAULT is used by default.
+
+    openh264_encoder->SetOption(ENCODER_OPTION_TRACE_CALLBACK, (void*)(&RTCTraceCallback));
+    RTC_LOG(INFO) << "OpenH264 encoder initialized with RTC trace callback";
 
     // Store h264 encoder.
     encoders_[i] = openh264_encoder;
