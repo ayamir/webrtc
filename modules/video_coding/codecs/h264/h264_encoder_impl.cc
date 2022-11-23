@@ -623,6 +623,8 @@ SEncParamExt H264EncoderImpl::CreateEncoderParams(size_t i) const {
       encoder_params.sSpatialLayers[0].sSliceArgument.uiSliceMode =
           SM_FIXEDSLCNUM_SLICE;
       RTC_LOG(INFO) << "Encoder is configured with uiSliceNum=0, uiSliceMode=SM_FIXEDSLCNUM_SLICE";
+      encoder_params.sSpatialLayers[0].uiProfileIdc = PRO_BASELINE;
+      encoder_params.sSpatialLayers[0].uiLevelIdc = LEVEL_5_2;
       break;
   }
   return encoder_params;
