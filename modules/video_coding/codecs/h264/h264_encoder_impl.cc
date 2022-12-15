@@ -477,29 +477,54 @@ int32_t H264EncoderImpl::Encode(
     memset(&info, 0, sizeof(SFrameBSInfo));
 
     // Get Object range from VideoFrame
-    auto object_range = input_frame.object_range();
-    if (object_range.IsEmpty()) {
+    // auto object_range = input_frame.object_range();
+    // if (object_range.IsEmpty()) {
+    //   // NOTE: Encode here
+    //   int enc_ret = encoders_[i]->EncodeFrame(&pictures_[i], &info);
+    //   if (enc_ret != 0) {
+    //     RTC_LOG(LS_ERROR)
+    //         << "OpenH264 frame encoding without ObjectRange failed, EncodeFrame returned " << enc_ret
+    //         << ".";
+    //     ReportError();
+    //     return WEBRTC_VIDEO_CODEC_ERROR;
+    //   }
+    // } else {
+    //   // NOTE: Encode here
+    //   SObjectRange object_range_;
+    //   object_range_.iXStart = (short)object_range.iXStart;
+    //   object_range_.iXEnd = (short)object_range.iXEnd;
+    //   object_range_.iYStart = (short)object_range.iYStart;
+    //   object_range_.iYEnd = (short)object_range.iYEnd;
+    //   object_range_.iQpOffset = (int)object_range.iQpOffset;
+    //   int enc_ret = encoders_[i]->EncodeFrame(&pictures_[i], &info, &object_range_);
+    //   if (enc_ret != 0) {
+    //     RTC_LOG(LS_ERROR)
+    //         << "OpenH264 frame encoding with ObjectRange failed, EncodeFrame returned " << enc_ret
+    //         << ".";
+    //     ReportError();
+    //     return WEBRTC_VIDEO_CODEC_ERROR;
+    //   }
+    // }
+    auto priority_array = input_frame.priority_array();
+    auto array_size = (input_frame.height() / 16) * (input_frame.width() / 16);
+    RTC_LOG(LS_INFO) << "PriorityArray size: " << array_size;
+    if (priority_array != nullptr) {
       // NOTE: Encode here
-      int enc_ret = encoders_[i]->EncodeFrame(&pictures_[i], &info);
+      int enc_ret = encoders_[i]->EncodeFrame(&pictures_[i], &info, priority_array);
       if (enc_ret != 0) {
         RTC_LOG(LS_ERROR)
-            << "OpenH264 frame encoding without ObjectRange failed, EncodeFrame returned " << enc_ret
+            << "OpenH264 frame encoding with PriorityArray failed, EncodeFrame returned " << enc_ret
             << ".";
         ReportError();
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
     } else {
       // NOTE: Encode here
-      SObjectRange object_range_;
-      object_range_.iXStart = (short)object_range.iXStart;
-      object_range_.iXEnd = (short)object_range.iXEnd;
-      object_range_.iYStart = (short)object_range.iYStart;
-      object_range_.iYEnd = (short)object_range.iYEnd;
-      object_range_.iQpOffset = (int)object_range.iQpOffset;
-      int enc_ret = encoders_[i]->EncodeFrame(&pictures_[i], &info, &object_range_);
+      RTC_LOG(LS_ERROR) << "OpenH264 frame encoding without PriorityArray.";
+      int enc_ret = encoders_[i]->EncodeFrame(&pictures_[i], &info);
       if (enc_ret != 0) {
         RTC_LOG(LS_ERROR)
-            << "OpenH264 frame encoding with ObjectRange failed, EncodeFrame returned " << enc_ret
+            << "OpenH264 frame encoding without PriorityArray failed, EncodeFrame returned " << enc_ret
             << ".";
         ReportError();
         return WEBRTC_VIDEO_CODEC_ERROR;
@@ -631,10 +656,11 @@ SEncParamExt H264EncoderImpl::CreateEncoderParams(size_t i) const {
       // design it with cpu core number.
       // TODO(sprang): Set to 0 when we understand why the rate controller borks
       //               when uiSliceNum > 1.
-      encoder_params.sSpatialLayers[0].sSliceArgument.uiSliceNum = 0;
+      // NOTE: uiSliceNum = 0 will open multi-threading in encoder
+      //                      but it will disable the customized QP setting
+      encoder_params.sSpatialLayers[0].sSliceArgument.uiSliceNum = 1;
       encoder_params.sSpatialLayers[0].sSliceArgument.uiSliceMode =
           SM_FIXEDSLCNUM_SLICE;
-      RTC_LOG(INFO) << "Encoder is configured with uiSliceNum=0, uiSliceMode=SM_FIXEDSLCNUM_SLICE";
       encoder_params.sSpatialLayers[0].uiProfileIdc = PRO_BASELINE;
       encoder_params.sSpatialLayers[0].uiLevelIdc = LEVEL_5_2;
       break;

@@ -117,10 +117,8 @@ class RTC_EXPORT VideoFrame {
     Builder& set_id(uint16_t id);
     Builder& set_update_rect(const absl::optional<UpdateRect>& update_rect);
     Builder& set_packet_infos(RtpPacketInfos packet_infos);
-    // TODO: set object range here.
     Builder& set_object_range(const absl::optional<ObjectRange>& object_range);
-    // TODO: set object range list here.
-    // Builder& set_object_range_list(const std::vector<const ObjectRange&> object_range_list);
+    Builder& set_priority_array(int *priority_array);
 
    private:
     uint16_t id_ = 0;
@@ -132,9 +130,8 @@ class RTC_EXPORT VideoFrame {
     absl::optional<ColorSpace> color_space_;
     absl::optional<UpdateRect> update_rect_;
     RtpPacketInfos packet_infos_;
-    // TODO: add object range here.
     absl::optional<ObjectRange> object_range_;
-    // std::vector<const ObjectRange&> object_range_list_;
+    int* priority_array_ = nullptr;
   };
 
   // To be deprecated. Migrate all use to Builder.
@@ -271,9 +268,19 @@ class RTC_EXPORT VideoFrame {
     object_range_ = object_range;
   }
 
+  bool has_priority_array() const { return priority_array_ != nullptr; }
+
+  int* priority_array() const { return priority_array_; }
+
+  void set_priority_array(int* priority_array) {
+    priority_array_ = priority_array;
+  }
+
   void clear_update_rect() { update_rect_ = absl::nullopt; }
 
   void clear_object_range() { object_range_ = absl::nullopt; }
+
+  void clear_priority_array() { priority_array_ = nullptr; }
 
   // Get information about packets used to assemble this video frame. Might be
   // empty if the information isn't available.
@@ -309,7 +316,8 @@ class RTC_EXPORT VideoFrame {
              const absl::optional<ColorSpace>& color_space,
              const absl::optional<UpdateRect>& update_rect,
              RtpPacketInfos packet_infos,
-             const absl::optional<ObjectRange>& object_range);
+             const absl::optional<ObjectRange>& object_range,
+             int *priority_array);
 
   // VideoFrame(uint16_t id,
   //            const rtc::scoped_refptr<VideoFrameBuffer>& buffer,
@@ -349,6 +357,7 @@ class RTC_EXPORT VideoFrame {
   // TODO: Update object range everyframe.
   absl::optional<ObjectRange> object_range_;
   // std::vector<const ObjectRange&> object_range_list_;
+  int* priority_array_;
 };
 
 }  // namespace webrtc

@@ -172,7 +172,7 @@ VideoFrame VideoFrame::Builder::build() {
   RTC_CHECK(video_frame_buffer_ != nullptr);
   return VideoFrame(id_, video_frame_buffer_, timestamp_us_, timestamp_rtp_,
                     ntp_time_ms_, rotation_, color_space_, update_rect_,
-                    packet_infos_, object_range_);
+                    packet_infos_, object_range_, priority_array_);
 }
 
 // VideoFrame VideoFrame::Builder::build() {
@@ -252,14 +252,10 @@ VideoFrame::Builder& VideoFrame::Builder::set_object_range(
   return *this;
 }
 
-// VideoFrame::Builder& VideoFrame::Builder::set_object_range_list(
-//     const std::vector<const VideoFrame::ObjectRange&> object_range_list) {
-//   for (auto &&object_range : object_range_list)
-//   {
-//     object_range_list_.push_back(object_range);
-//   }
-//   return *this;
-// }
+VideoFrame::Builder& VideoFrame::Builder::set_priority_array(int *priority_array) {
+  priority_array_ = priority_array;
+  return *this;
+}
 
 VideoFrame::VideoFrame(const rtc::scoped_refptr<VideoFrameBuffer>& buffer,
                        webrtc::VideoRotation rotation,
@@ -317,7 +313,8 @@ VideoFrame::VideoFrame(uint16_t id,
                         const absl::optional<ColorSpace>& color_space,
                         const absl::optional<UpdateRect>& update_rect,
                         RtpPacketInfos packet_infos,
-                        const absl::optional<ObjectRange>& object_range)
+                        const absl::optional<ObjectRange>& object_range,
+                        int *priority_array)
     : id_(id),
       video_frame_buffer_(buffer),
       timestamp_rtp_(timestamp_rtp),
@@ -327,7 +324,8 @@ VideoFrame::VideoFrame(uint16_t id,
       color_space_(color_space),
       update_rect_(update_rect),
       packet_infos_(std::move(packet_infos)),
-      object_range_(object_range) {
+      object_range_(object_range),
+      priority_array_(priority_array) {
   if (update_rect_) {
     RTC_DCHECK_GE(update_rect_->offset_x, 0);
     RTC_DCHECK_GE(update_rect_->offset_y, 0);
