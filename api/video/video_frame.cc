@@ -252,7 +252,7 @@ VideoFrame::Builder& VideoFrame::Builder::set_object_range(
   return *this;
 }
 
-VideoFrame::Builder& VideoFrame::Builder::set_priority_array(int *priority_array) {
+VideoFrame::Builder& VideoFrame::Builder::set_priority_array(uint32_t *priority_array) {
   priority_array_ = priority_array;
   return *this;
 }
@@ -314,7 +314,7 @@ VideoFrame::VideoFrame(uint16_t id,
                         const absl::optional<UpdateRect>& update_rect,
                         RtpPacketInfos packet_infos,
                         const absl::optional<ObjectRange>& object_range,
-                        int *priority_array)
+                        uint32_t *priority_array)
     : id_(id),
       video_frame_buffer_(buffer),
       timestamp_rtp_(timestamp_rtp),

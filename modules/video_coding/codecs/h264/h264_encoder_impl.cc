@@ -55,13 +55,13 @@ enum H264EncoderImplEvent {
 int NumberOfThreads(int width, int height, int number_of_cores) {
   // TODO(hbos): In Chromium, multiple threads do not work with sandbox on Mac,
   // see crbug.com/583348. Until further investigated, only use one thread.
-  if (width * height >= 1920 * 1832 || number_of_cores >= 24) {
-    return 24;  // 24 threads for oculus quest 2.
+  if (width * height >= 1296 * 1440 || number_of_cores >= 16) {
+    return 16;  // 24 threads for oculus quest 2.
   } else if (width * height >= 1920 * 1080 || number_of_cores >= 8) {
     return 8;  // 8 threads for 1080p on high perf machines.
-  } else if (width * height > 1280 * 960 || number_of_cores >= 6) {
-    return 3;  // 3 threads for 1080p.
-  } else if (width * height > 640 * 480 || number_of_cores >= 3) {
+  } else if (width * height > 1280 * 720 || number_of_cores >= 4) {
+    return 4;  // 3 threads for 1080p.
+  } else if (width * height > 640 * 480 || number_of_cores >= 2) {
     return 2;  // 2 threads for qHD/HD.
   } else {
     return 1;  // 1 thread for VGA or less.
@@ -476,7 +476,7 @@ int32_t H264EncoderImpl::Encode(
     SFrameBSInfo info;
     memset(&info, 0, sizeof(SFrameBSInfo));
 
-    // Get Object range from VideoFrame
+    // NOTE: use object_range to implement object-level QP setting.
     // auto object_range = input_frame.object_range();
     // if (object_range.IsEmpty()) {
     //   // NOTE: Encode here
@@ -505,9 +505,9 @@ int32_t H264EncoderImpl::Encode(
     //     return WEBRTC_VIDEO_CODEC_ERROR;
     //   }
     // }
+
+    // NOTE: use priority_array to implement object-level QP setting.
     auto priority_array = input_frame.priority_array();
-    auto array_size = (input_frame.height() / 16) * (input_frame.width() / 16);
-    RTC_LOG(LS_INFO) << "PriorityArray size: " << array_size;
     if (priority_array != nullptr) {
       // NOTE: Encode here
       int enc_ret = encoders_[i]->EncodeFrame(&pictures_[i], &info, priority_array);
@@ -621,7 +621,7 @@ SEncParamExt H264EncoderImpl::CreateEncoderParams(size_t i) const {
   //  0: auto (dynamic imp. internal encoder)
   //  1: single thread (default value)
   // >1: number of threads
-  int cores = 64;
+  int cores = 16;
   encoder_params.iMultipleThreadIdc = NumberOfThreads(
       encoder_params.iPicWidth, encoder_params.iPicHeight, cores);
   // encoder_params.iMultipleThreadIdc = 0;

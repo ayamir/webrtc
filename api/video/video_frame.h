@@ -118,7 +118,7 @@ class RTC_EXPORT VideoFrame {
     Builder& set_update_rect(const absl::optional<UpdateRect>& update_rect);
     Builder& set_packet_infos(RtpPacketInfos packet_infos);
     Builder& set_object_range(const absl::optional<ObjectRange>& object_range);
-    Builder& set_priority_array(int *priority_array);
+    Builder& set_priority_array(uint32_t *priority_array);
 
    private:
     uint16_t id_ = 0;
@@ -131,7 +131,7 @@ class RTC_EXPORT VideoFrame {
     absl::optional<UpdateRect> update_rect_;
     RtpPacketInfos packet_infos_;
     absl::optional<ObjectRange> object_range_;
-    int* priority_array_ = nullptr;
+    uint32_t* priority_array_ = nullptr;
   };
 
   // To be deprecated. Migrate all use to Builder.
@@ -270,9 +270,9 @@ class RTC_EXPORT VideoFrame {
 
   bool has_priority_array() const { return priority_array_ != nullptr; }
 
-  int* priority_array() const { return priority_array_; }
+  uint32_t* priority_array() const { return priority_array_; }
 
-  void set_priority_array(int* priority_array) {
+  void set_priority_array(uint32_t* priority_array) {
     priority_array_ = priority_array;
   }
 
@@ -317,7 +317,7 @@ class RTC_EXPORT VideoFrame {
              const absl::optional<UpdateRect>& update_rect,
              RtpPacketInfos packet_infos,
              const absl::optional<ObjectRange>& object_range,
-             int *priority_array);
+             uint32_t *priority_array);
 
   // VideoFrame(uint16_t id,
   //            const rtc::scoped_refptr<VideoFrameBuffer>& buffer,
@@ -357,7 +357,7 @@ class RTC_EXPORT VideoFrame {
   // TODO: Update object range everyframe.
   absl::optional<ObjectRange> object_range_;
   // std::vector<const ObjectRange&> object_range_list_;
-  int* priority_array_;
+  uint32_t* priority_array_;
 };
 
 }  // namespace webrtc
