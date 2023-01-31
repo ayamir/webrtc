@@ -86,6 +86,8 @@ class H264EncoderImpl : public H264Encoder {
     return packetization_mode_;
   }
 
+  inline bool IsBitrateLow() const { return is_bitrate_low_; }
+
  private:
   SEncParamExt CreateEncoderParams(size_t i) const;
 
@@ -93,6 +95,7 @@ class H264EncoderImpl : public H264Encoder {
   // Reports statistics with histograms.
   void ReportInit();
   void ReportError();
+  void SetIsBitrateLow(bool is_bitrate_low);
 
   std::vector<ISVCEncoder*> encoders_;
   std::vector<SSourcePicture> pictures_;
@@ -108,6 +111,7 @@ class H264EncoderImpl : public H264Encoder {
 
   bool has_reported_init_;
   bool has_reported_error_;
+  bool is_bitrate_low_;
 
   std::vector<uint8_t> tl0sync_limit_;
 };

@@ -159,7 +159,8 @@ H264EncoderImpl::H264EncoderImpl(const cricket::VideoCodec& codec)
       number_of_cores_(0),
       encoded_image_callback_(nullptr),
       has_reported_init_(false),
-      has_reported_error_(false) {
+      has_reported_error_(false),
+      is_bitrate_low_(false) {
   RTC_CHECK(absl::EqualsIgnoreCase(codec.name, cricket::kH264CodecName));
   std::string packetization_mode_string;
   if (codec.GetParam(cricket::kH264FmtpPacketizationMode,
@@ -350,6 +351,7 @@ void H264EncoderImpl::SetRates(const RateControlParameters& parameters) {
     }
     return;
   }
+  SetIsBitrateLow(true);
 
   codec_.maxFramerate = static_cast<uint32_t>(parameters.framerate_fps);
 
@@ -476,40 +478,9 @@ int32_t H264EncoderImpl::Encode(
     SFrameBSInfo info;
     memset(&info, 0, sizeof(SFrameBSInfo));
 
-    // NOTE: use object_range to implement object-level QP setting.
-    // auto object_range = input_frame.object_range();
-    // if (object_range.IsEmpty()) {
-    //   // NOTE: Encode here
-    //   int enc_ret = encoders_[i]->EncodeFrame(&pictures_[i], &info);
-    //   if (enc_ret != 0) {
-    //     RTC_LOG(LS_ERROR)
-    //         << "OpenH264 frame encoding without ObjectRange failed, EncodeFrame returned " << enc_ret
-    //         << ".";
-    //     ReportError();
-    //     return WEBRTC_VIDEO_CODEC_ERROR;
-    //   }
-    // } else {
-    //   // NOTE: Encode here
-    //   SObjectRange object_range_;
-    //   object_range_.iXStart = (short)object_range.iXStart;
-    //   object_range_.iXEnd = (short)object_range.iXEnd;
-    //   object_range_.iYStart = (short)object_range.iYStart;
-    //   object_range_.iYEnd = (short)object_range.iYEnd;
-    //   object_range_.iQpOffset = (int)object_range.iQpOffset;
-    //   int enc_ret = encoders_[i]->EncodeFrame(&pictures_[i], &info, &object_range_);
-    //   if (enc_ret != 0) {
-    //     RTC_LOG(LS_ERROR)
-    //         << "OpenH264 frame encoding with ObjectRange failed, EncodeFrame returned " << enc_ret
-    //         << ".";
-    //     ReportError();
-    //     return WEBRTC_VIDEO_CODEC_ERROR;
-    //   }
-    // }
-
     // NOTE: use priority_array to implement object-level QP setting.
     auto priority_array = input_frame.priority_array();
-    if (priority_array != nullptr) {
-      // NOTE: Encode here
+    if (priority_array != nullptr && IsBitrateLow()) {
       int enc_ret = encoders_[i]->EncodeFrame(&pictures_[i], &info, priority_array);
       if (enc_ret != 0) {
         RTC_LOG(LS_ERROR)
@@ -519,8 +490,6 @@ int32_t H264EncoderImpl::Encode(
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
     } else {
-      // NOTE: Encode here
-      RTC_LOG(LS_ERROR) << "OpenH264 frame encoding without PriorityArray.";
       int enc_ret = encoders_[i]->EncodeFrame(&pictures_[i], &info);
       if (enc_ret != 0) {
         RTC_LOG(LS_ERROR)
@@ -682,6 +651,10 @@ void H264EncoderImpl::ReportError() {
   RTC_HISTOGRAM_ENUMERATION("WebRTC.Video.H264EncoderImpl.Event",
                             kH264EncoderEventError, kH264EncoderEventMax);
   has_reported_error_ = true;
+}
+
+void H264EncoderImpl::SetIsBitrateLow(bool is_bitrate_low) {
+  is_bitrate_low_ = is_bitrate_low;
 }
 
 VideoEncoder::EncoderInfo H264EncoderImpl::GetEncoderInfo() const {
