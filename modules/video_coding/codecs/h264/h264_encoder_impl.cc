@@ -480,7 +480,7 @@ int32_t H264EncoderImpl::Encode(
 
     // NOTE: use priority_array to implement object-level QP setting.
     auto priority_array = input_frame.priority_array();
-    if (priority_array != nullptr && IsBitrateLow()) {
+    if (priority_array != nullptr) {
       int enc_ret = encoders_[i]->EncodeFrame(&pictures_[i], &info, priority_array);
       if (enc_ret != 0) {
         RTC_LOG(LS_ERROR)
