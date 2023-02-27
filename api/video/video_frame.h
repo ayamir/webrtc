@@ -97,7 +97,7 @@ class RTC_EXPORT VideoFrame {
     Builder& set_id(uint16_t id);
     Builder& set_update_rect(const absl::optional<UpdateRect>& update_rect);
     Builder& set_packet_infos(RtpPacketInfos packet_infos);
-    Builder& set_priority_array(uint32_t *priority_array);
+    Builder& set_priority_array(float *priority_array);
 
    private:
     uint16_t id_ = 0;
@@ -109,7 +109,7 @@ class RTC_EXPORT VideoFrame {
     absl::optional<ColorSpace> color_space_;
     absl::optional<UpdateRect> update_rect_;
     RtpPacketInfos packet_infos_;
-    uint32_t* priority_array_ = nullptr;
+    float* priority_array_ = nullptr;
   };
 
   // To be deprecated. Migrate all use to Builder.
@@ -234,9 +234,9 @@ class RTC_EXPORT VideoFrame {
 
   bool has_priority_array() const { return priority_array_ != nullptr; }
 
-  uint32_t* priority_array() const { return priority_array_; }
+  float* priority_array() const { return priority_array_; }
 
-  void set_priority_array(uint32_t* priority_array) {
+  void set_priority_array(float* priority_array) {
     priority_array_ = priority_array;
   }
 
@@ -278,7 +278,7 @@ class RTC_EXPORT VideoFrame {
              const absl::optional<ColorSpace>& color_space,
              const absl::optional<UpdateRect>& update_rect,
              RtpPacketInfos packet_infos,
-             uint32_t *priority_array);
+             float *priority_array);
 
   uint16_t id_;
   // An opaque reference counted handle that stores the pixel data.
@@ -304,7 +304,7 @@ class RTC_EXPORT VideoFrame {
   // returned from the decoder.
   // Currently, not set for locally captured video frames.
   absl::optional<ProcessingTime> processing_time_;
-  uint32_t* priority_array_;
+  float* priority_array_;
 };
 
 }  // namespace webrtc
