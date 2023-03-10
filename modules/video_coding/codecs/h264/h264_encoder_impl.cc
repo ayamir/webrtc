@@ -52,24 +52,24 @@ enum H264EncoderImplEvent {
   kH264EncoderEventMax = 16,
 };
 
-int NumberOfThreads(int width, int height, int number_of_cores) {
-  // TODO(hbos): In Chromium, multiple threads do not work with sandbox on Mac,
-  // see crbug.com/583348. Until further investigated, only use one thread.
-  if (width * height >= 1296 * 1440 || number_of_cores >= 16) {
-    return 16;  // 24 threads for oculus quest 2.
-  } else if (width * height >= 1920 * 1080 || number_of_cores >= 8) {
-    return 8;  // 8 threads for 1080p on high perf machines.
-  } else if (width * height > 1280 * 720 || number_of_cores >= 4) {
-    return 4;  // 3 threads for 1080p.
-  } else if (width * height > 640 * 480 || number_of_cores >= 2) {
-    return 2;  // 2 threads for qHD/HD.
-  } else {
-    return 1;  // 1 thread for VGA or less.
-  }
-  // TODO(sprang): Also check sSliceArgument.uiSliceNum om GetEncoderPrams(),
-  //               before enabling multithreading here.
-  // return 1;
-}
+// int NumberOfThreads(int width, int height, int number_of_cores) {
+//   // TODO(hbos): In Chromium, multiple threads do not work with sandbox on Mac,
+//   // see crbug.com/583348. Until further investigated, only use one thread.
+//   if (width * height >= 1296 * 1440 || number_of_cores >= 16) {
+//     return 16;  // 24 threads for oculus quest 2.
+//   } else if (width * height >= 1920 * 1080 || number_of_cores >= 8) {
+//     return 8;  // 8 threads for 1080p on high perf machines.
+//   } else if (width * height > 1280 * 720 || number_of_cores >= 4) {
+//     return 4;  // 3 threads for 1080p.
+//   } else if (width * height > 640 * 480 || number_of_cores >= 2) {
+//     return 2;  // 2 threads for qHD/HD.
+//   } else {
+//     return 1;  // 1 thread for VGA or less.
+//   }
+//   // TODO(sprang): Also check sSliceArgument.uiSliceNum om GetEncoderPrams(),
+//   //               before enabling multithreading here.
+//   // return 1;
+// }
 
 static void RTCTraceCallback(void* ctx, int level, const char* string) {
   if (level == WELS_LOG_INFO) {
@@ -159,8 +159,7 @@ H264EncoderImpl::H264EncoderImpl(const cricket::VideoCodec& codec)
       number_of_cores_(0),
       encoded_image_callback_(nullptr),
       has_reported_init_(false),
-      has_reported_error_(false),
-      is_bitrate_low_(false) {
+      has_reported_error_(false) {
   RTC_CHECK(absl::EqualsIgnoreCase(codec.name, cricket::kH264CodecName));
   std::string packetization_mode_string;
   if (codec.GetParam(cricket::kH264FmtpPacketizationMode,
@@ -202,6 +201,8 @@ int32_t H264EncoderImpl::InitEncode(const VideoCodec* inst,
   }
 
   int number_of_streams = SimulcastUtility::NumberOfSimulcastStreams(*inst);
+  RTC_LOG(LS_WARNING) << "H264EncoderImpl::InitEncode number_of_streams "
+                      << number_of_streams;
   bool doing_simulcast = (number_of_streams > 1);
 
   if (doing_simulcast &&
@@ -271,11 +272,12 @@ int32_t H264EncoderImpl::InitEncode(const VideoCodec* inst,
     }
 
     // Codec_settings uses kbits/second; encoder uses bits/second.
-    configurations_[i].max_bps = codec_.maxBitrate * 1000;
-    configurations_[i].target_bps = codec_.startBitrate * 1000;
+    // configurations_[i].max_bps = codec_.maxBitrate * 1000;
+    // configurations_[i].target_bps = codec_.startBitrate * 1000;
+    configurations_[i].max_bps = 60 * 1000 * 1000; // 60M
+    configurations_[i].target_bps = 10 * 1000 * 1000; // 10M
 
     // Create encoder parameters based on the layer configuration.
-    // NOTE: init Object Range here in InitEncode.
     SEncParamExt encoder_params = CreateEncoderParams(i);
 
     // Initialize.
@@ -351,7 +353,6 @@ void H264EncoderImpl::SetRates(const RateControlParameters& parameters) {
     }
     return;
   }
-  SetIsBitrateLow(true);
 
   codec_.maxFramerate = static_cast<uint32_t>(parameters.framerate_fps);
 
@@ -369,8 +370,14 @@ void H264EncoderImpl::SetRates(const RateControlParameters& parameters) {
       SBitrateInfo target_bitrate;
       memset(&target_bitrate, 0, sizeof(SBitrateInfo));
       target_bitrate.iLayer = SPATIAL_LAYER_ALL,
-      target_bitrate.iBitrate = configurations_[i].target_bps;
+      // target_bitrate.iBitrate = configurations_[i].target_bps;
+      target_bitrate.iBitrate = 4 * 1000 * 1000;
       encoders_[i]->SetOption(ENCODER_OPTION_BITRATE, &target_bitrate);
+      SBitrateInfo max_bitrate;
+      memset(&max_bitrate, 0, sizeof(SBitrateInfo));
+      max_bitrate.iLayer = SPATIAL_LAYER_ALL,
+      max_bitrate.iBitrate = 10 * 1000 * 1000;
+      encoders_[i]->SetOption(ENCODER_OPTION_MAX_BITRATE, &max_bitrate);
       encoders_[i]->SetOption(ENCODER_OPTION_FRAME_RATE,
                               &configurations_[i].max_frame_rate);
     } else {
@@ -585,16 +592,11 @@ SEncParamExt H264EncoderImpl::CreateEncoderParams(size_t i) const {
   // equivalent to CONSTANT_ID.
   encoder_params.eSpsPpsIdStrategy = SPS_LISTING;
   encoder_params.uiMaxNalSize = 0;
-  // TODO(ayamir): use multi-thread to improve performance.
   // Threading model: use auto.
   //  0: auto (dynamic imp. internal encoder)
   //  1: single thread (default value)
   // >1: number of threads
-  int cores = 16;
-  encoder_params.iMultipleThreadIdc = NumberOfThreads(
-      encoder_params.iPicWidth, encoder_params.iPicHeight, cores);
-  // encoder_params.iMultipleThreadIdc = 0;
-  RTC_LOG(LS_INFO) << "OpenH264 encoder thread count: " << encoder_params.iMultipleThreadIdc;
+  encoder_params.iMultipleThreadIdc = 1;
   // The base spatial layer 0 is the only one we use.
   encoder_params.sSpatialLayers[0].iVideoWidth = encoder_params.iPicWidth;
   encoder_params.sSpatialLayers[0].iVideoHeight = encoder_params.iPicHeight;
@@ -629,7 +631,7 @@ SEncParamExt H264EncoderImpl::CreateEncoderParams(size_t i) const {
       //                      but it will disable the customized QP setting
       encoder_params.sSpatialLayers[0].sSliceArgument.uiSliceNum = 1;
       encoder_params.sSpatialLayers[0].sSliceArgument.uiSliceMode =
-          SM_FIXEDSLCNUM_SLICE;
+          SM_SINGLE_SLICE;
       encoder_params.sSpatialLayers[0].uiProfileIdc = PRO_BASELINE;
       encoder_params.sSpatialLayers[0].uiLevelIdc = LEVEL_5_2;
       break;
@@ -651,10 +653,6 @@ void H264EncoderImpl::ReportError() {
   RTC_HISTOGRAM_ENUMERATION("WebRTC.Video.H264EncoderImpl.Event",
                             kH264EncoderEventError, kH264EncoderEventMax);
   has_reported_error_ = true;
-}
-
-void H264EncoderImpl::SetIsBitrateLow(bool is_bitrate_low) {
-  is_bitrate_low_ = is_bitrate_low;
 }
 
 VideoEncoder::EncoderInfo H264EncoderImpl::GetEncoderInfo() const {
