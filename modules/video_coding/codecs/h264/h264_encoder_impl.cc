@@ -370,14 +370,8 @@ void H264EncoderImpl::SetRates(const RateControlParameters& parameters) {
       SBitrateInfo target_bitrate;
       memset(&target_bitrate, 0, sizeof(SBitrateInfo));
       target_bitrate.iLayer = SPATIAL_LAYER_ALL,
-      // target_bitrate.iBitrate = configurations_[i].target_bps;
-      target_bitrate.iBitrate = 4 * 1000 * 1000;
+      target_bitrate.iBitrate = configurations_[i].target_bps;
       encoders_[i]->SetOption(ENCODER_OPTION_BITRATE, &target_bitrate);
-      SBitrateInfo max_bitrate;
-      memset(&max_bitrate, 0, sizeof(SBitrateInfo));
-      max_bitrate.iLayer = SPATIAL_LAYER_ALL,
-      max_bitrate.iBitrate = 10 * 1000 * 1000;
-      encoders_[i]->SetOption(ENCODER_OPTION_MAX_BITRATE, &max_bitrate);
       encoders_[i]->SetOption(ENCODER_OPTION_FRAME_RATE,
                               &configurations_[i].max_frame_rate);
     } else {
