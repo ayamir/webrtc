@@ -406,16 +406,16 @@ rtc_library("webrtc_h264") {
 
   if (rtc_use_h264) {
     if (!is_clang) {
-      include_dirs = [ "//third_party/ffmpeg_msvc/include" ]
+      include_dirs = [ "//sdk/libs/ffmpeg/include" ]
       libs = [
-        "//third_party/ffmpeg_msvc/lib/avcodec.lib",
-        "//third_party/ffmpeg_msvc/lib/avdevice.lib",
-        "//third_party/ffmpeg_msvc/lib/avfilter.lib",
-        "//third_party/ffmpeg_msvc/lib/avformat.lib",
-        "//third_party/ffmpeg_msvc/lib/avutil.lib",
-        "//third_party/ffmpeg_msvc/lib/postproc.lib",
-        "//third_party/ffmpeg_msvc/lib/swresample.lib",
-        "//third_party/ffmpeg_msvc/lib/swscale.lib",
+        "//sdk/libs/ffmpeg/lib/avcodec.lib",
+        "//sdk/libs/ffmpeg/lib/avdevice.lib",
+        "//sdk/libs/ffmpeg/lib/avfilter.lib",
+        "//sdk/libs/ffmpeg/lib/avformat.lib",
+        "//sdk/libs/ffmpeg/lib/avutil.lib",
+        "//sdk/libs/ffmpeg/lib/postproc.lib",
+        "//sdk/libs/ffmpeg/lib/swresample.lib",
+        "//sdk/libs/ffmpeg/lib/swscale.lib",
       ]
     } else {
       deps += [

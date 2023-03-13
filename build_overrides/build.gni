@@ -44,6 +44,12 @@ if (host_os == "mac") {
   use_system_xcode = _result == 0
 }
 
+if (is_win) {
+  rtc_use_recorder = true
+} else {
+  rtc_use_recorder = false
+}
+
 declare_args() {
   # WebRTC doesn't depend on //base from production code but only for testing
   # purposes. In any case, it doesn't depend on //third_party/perfetto which
