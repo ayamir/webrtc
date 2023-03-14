@@ -157,10 +157,6 @@ class VideoReceiveStream2 : public webrtc::VideoReceiveStream,
                                          bool generate_key_frame) override;
   void GenerateKeyFrame() override;
 
-#ifndef DISABLE_RECORDER
-  void InjectRecorder(Recorder* recorder) override;
-#endif
-
  private:
   int64_t GetMaxWaitMs() const RTC_RUN_ON(decode_queue_);
   void StartNextDecode() RTC_RUN_ON(decode_queue_);
@@ -271,11 +267,6 @@ class VideoReceiveStream2 : public webrtc::VideoReceiveStream,
   // taken into account when calculating maximum number of frames in composition
   // queue.
   FieldTrialParameter<bool> low_latency_renderer_include_predecode_buffer_;
-
-#ifndef DISABLE_RECORDER
-  webrtc::Mutex recorder_lock_;
-  Recorder* recorder_ RTC_GUARDED_BY(recorder_lock_);
-#endif
 
   // Defined last so they are destroyed before all other members.
   rtc::TaskQueue decode_queue_;

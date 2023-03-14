@@ -19,7 +19,6 @@
 
 #include "absl/types/optional.h"
 #include "api/array_view.h"
-#include "api/audio_codecs/audio_encoder.h"
 #include "rtc_base/buffer.h"
 #include "rtc_base/constructor_magic.h"
 
@@ -53,10 +52,6 @@ class AudioDecoder {
 
     // Returns true if this packet contains DTX.
     virtual bool IsDtxPacket() const;
-
-    virtual AudioEncoder::CodecType CodecType() = 0;
-    virtual int PayloadSize() = 0;
-    virtual const uint8_t* PayloadData() = 0;
 
     // Decodes this frame of audio and writes the result in |decoded|.
     // |decoded| must be large enough to store as many samples as indicated by a
@@ -174,8 +169,6 @@ class AudioDecoder {
   // The number of channels in the decoder's output. This value may not change
   // during the lifetime of the decoder.
   virtual size_t Channels() const = 0;
-
-  virtual AudioEncoder::CodecType CodecType() = 0;
 
  protected:
   static SpeechType ConvertSpeechType(int16_t type);

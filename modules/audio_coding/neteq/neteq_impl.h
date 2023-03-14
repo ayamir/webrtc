@@ -29,9 +29,6 @@
 #include "modules/audio_coding/neteq/packet.h"
 #include "modules/audio_coding/neteq/random_vector.h"
 #include "modules/audio_coding/neteq/statistics_calculator.h"
-#ifndef DISABLE_RECORDER
-#include "modules/recording/recorder.h"
-#endif
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
@@ -198,10 +195,6 @@ class NetEqImpl : public webrtc::NetEq {
 
   int SyncBufferSizeMs() const override;
 
-#ifndef DISABLE_RECORDER
-  void InjectRecorder(Recorder* recorder) override;
-#endif
-
   // This accessor method is only intended for testing purposes.
   const SyncBuffer* sync_buffer_for_test() const;
   Operation last_operation_for_test() const;
@@ -343,12 +336,6 @@ class NetEqImpl : public webrtc::NetEq {
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   Clock* const clock_;
-
-#ifndef DISABLE_RECORDER
-  Mutex recorder_lock_;
-  Recorder* recorder_ RTC_GUARDED_BY(recorder_lock_);
-  int channel_num_;
-#endif
 
   mutable Mutex mutex_;
   const std::unique_ptr<TickTimer> tick_timer_ RTC_GUARDED_BY(mutex_);

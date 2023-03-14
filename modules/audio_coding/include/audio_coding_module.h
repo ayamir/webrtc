@@ -23,9 +23,6 @@
 #include "api/neteq/neteq.h"
 #include "api/neteq/neteq_factory.h"
 #include "modules/audio_coding/include/audio_coding_module_typedefs.h"
-#ifndef DISABLE_RECORDER
-#include "modules/recording/recorder.h"
-#endif
 #include "system_wrappers/include/clock.h"
 
 namespace webrtc {
@@ -240,10 +237,6 @@ class AudioCodingModule {
       NetworkStatistics* network_statistics) = 0;
 
   virtual ANAStats GetANAStats() const = 0;
-
-#ifndef DISABLE_RECORDER
-  virtual void InjectRecorder(Recorder* recorder) = 0;
-#endif
 };
 
 }  // namespace webrtc
