@@ -272,10 +272,8 @@ int32_t H264EncoderImpl::InitEncode(const VideoCodec* inst,
     }
 
     // Codec_settings uses kbits/second; encoder uses bits/second.
-    // configurations_[i].max_bps = codec_.maxBitrate * 1000;
-    // configurations_[i].target_bps = codec_.startBitrate * 1000;
-    configurations_[i].max_bps = 60 * 1000 * 1000; // 60M
-    configurations_[i].target_bps = 10 * 1000 * 1000; // 10M
+    configurations_[i].max_bps = codec_.maxBitrate * 1000;
+    configurations_[i].target_bps = codec_.startBitrate * 1000;
 
     // Create encoder parameters based on the layer configuration.
     SEncParamExt encoder_params = CreateEncoderParams(i);
@@ -369,7 +367,7 @@ void H264EncoderImpl::SetRates(const RateControlParameters& parameters) {
       // Update h264 encoder.
       SBitrateInfo target_bitrate;
       memset(&target_bitrate, 0, sizeof(SBitrateInfo));
-      target_bitrate.iLayer = SPATIAL_LAYER_ALL,
+      target_bitrate.iLayer = SPATIAL_LAYER_ALL;
       target_bitrate.iBitrate = configurations_[i].target_bps;
       encoders_[i]->SetOption(ENCODER_OPTION_BITRATE, &target_bitrate);
       encoders_[i]->SetOption(ENCODER_OPTION_FRAME_RATE,
